@@ -72,6 +72,9 @@ int64_t nanos_per_samp = 1000000000 / 48000;
 double slope = 48000.0;
 double intercept;
 
+int audio_format;
+int audio_bytedepth;
+
 #include "include/base/sound_proto.h"
 
 // Initialize the stable regressor
@@ -101,6 +104,16 @@ void sound_init()
     dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_ANY_CHANGE);
 
     logprintf("have freq %d channels %d samples %d\n", have.freq, have.channels, have.samples);
+
+    audio_format = have.format;
+
+    if (audio_format == AUDIO_S16)
+        audio_bytedepth = 2;
+    else if (audio_format == AUDIO_F32 || audio_format == AUDIO_S32)
+        audio_bytedepth = 4;
+    else
+        audio_bytedepth = 1;
+
     SDL_PauseAudioDevice(dev, 0); /* play! */
 }
 
@@ -126,9 +139,9 @@ void sound_init()
 //
 void audio_callback(void* userdata, uint8_t* stream, int len)
 {
-    len = len/2;
+    len = len/audio_bytedepth;
 
-    short *buf = (short*)(stream);
+    int index = 0;
     SoundDebug dbg;
 
     for (int i = 0; i < len; ++i)
@@ -157,8 +170,15 @@ void audio_callback(void* userdata, uint8_t* stream, int len)
             logprintf("sound maxq %d\n", maxq);
         }
 
-        buf[i] = samp;
+        if (audio_format == AUDIO_S16)
+            *((short*)&stream[index]) = samp;
+        else if (audio_format == AUDIO_F32)
+            *((float*)&stream[index]) = samp * (1.0f / 16000.0f);
+        else if (audio_format == AUDIO_S32)
+            *((int32_t*)&stream[index]) = samp;
+
         audio_pos++;
+        index += audio_bytedepth;
     }
 
     audio_time = clocknanos();

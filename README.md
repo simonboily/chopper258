@@ -19,6 +19,8 @@ Thanks to Mark Currie for granting permission to publish this port of his game.
 
 ## Building and running
 
+### Desktop
+
 `SDL2` is required as a dependency, to install on Ubuntu, do this:
 
     $ sudo apt-get install libsdl2-dev
@@ -35,6 +37,29 @@ To run it:
 The default scale factor is 3x. To run with a different scale factor:
 
     $ ./bin/chopper258 2
+
+### Web (Emscripten)
+
+To build the web version, you'll need Emscripten SDK installed and the `EMSDK` environment variable set. 
+If you haven't installed Emscripten yet, follow the instructions at: https://emscripten.org/docs/getting_started/downloads.html
+
+Once Emscripten is set up, you can build the web version with:
+
+    $ make web
+
+This will create the following files in the `web` directory:
+- `chopper258.html` - The game webpage
+- `chopper258.js` - JavaScript support code
+- `chopper258.wasm` - WebAssembly binary
+
+To serve the game, run:
+
+    $ cd web
+    $ python3 ./server.py
+    
+Then open `http://localhost:8000/chopper258.html` in your web browser.
+
+## Playing
 
 To get started:
 

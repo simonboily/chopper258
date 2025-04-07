@@ -1,11 +1,19 @@
-$(shell mkdir -p bin/game bin/base bin/exe)
+$(shell mkdir -p bin/game bin/base bin/exe web)
 
 all: bin/chopper258
-	
+
+web: web/chopper258.html
+
 clean:
 	rm -rf bin
+	rm -rf web/chopper258.*
 
 UNAME := $(shell uname -s)
+EMSHELL_FILE := $(shell echo $$EMSDK)/upstream/emscripten/src/shell_minimal.html
+
+# Web compilation settings
+EMCC := emcc
+EMFLAGS := -O2 -I. -Ibase -Iinclude -s USE_SDL=2 -pthread -sPTHREAD_POOL_SIZE=4 -DNDEBUG -fno-strict-aliasing -flto -std=gnu99
 
 ifeq ($(UNAME),Darwin)
 	IFLAGS := -I . -I /Library/Frameworks/SDL2.framework/Headers 
@@ -38,3 +46,7 @@ bin/chopper258: bin/exe/chopper258.c.o \
 			    bin/base/turbo.c.o \
 				bin/base/font.c.o
 	gcc $(CFLAGS) $^ -o $@ $(LDFLAGS)
+
+# Web target
+web/chopper258.html: exe/chopper258.c base/input.c base/sound.c base/render.c game/chopper2.c base/turbo.c base/font.c
+	$(EMCC) $(EMFLAGS) $^ -o $@ --shell-file $(EMSHELL_FILE)

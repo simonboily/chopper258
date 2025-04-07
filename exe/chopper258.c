@@ -16,10 +16,17 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <time.h>
-#include <execinfo.h>
 #include <unistd.h>
 #include <assert.h>
 #include <pthread.h>
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <stdarg.h>
+#include <stdlib.h>
+#else
+#include <execinfo.h>
+#endif
 
 int64_t basenanos; // initted at main
 int frames;
@@ -28,6 +35,14 @@ pthread_t game_thread;
 
 int64_t clocknanos();
 static void run_game_thread();
+
+static void main_loop()
+{
+    frames++;
+
+    input();
+    render();
+}
 
 int main(int argc, char **argv)
 {
@@ -45,13 +60,14 @@ int main(int argc, char **argv)
 
     run_game_thread();
 
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop(main_loop, 0, 1);
+#else
     while (true)
     {
-        frames++;
-
-        input();
-        render();
+        main_loop();
     }
+#endif
 }
 
 static void run_game_thread()
@@ -62,9 +78,13 @@ static void run_game_thread()
 
 int64_t rawclocknanos()
 {
+#ifdef __EMSCRIPTEN__
+    return emscripten_get_now() * 1000000;
+#else
     struct timespec ts;
     clock_gettime( CLOCK_MONOTONIC_RAW, &ts);
     return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+#endif
 }
 
 int64_t clocknanos()
@@ -91,6 +111,12 @@ int64_t threadnanos()
 #ifndef NDEBUG
 void logprintf(const char* fmt, ...)
 {
+#ifdef __EMSCRIPTEN__
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+#else
     char buf[4096];
     va_list ap;
 
@@ -100,5 +126,6 @@ void logprintf(const char* fmt, ...)
 
     int64_t nanos = clocknanos();
     printf("%ld.%09ld %s", nanos / 1000000000, nanos % 1000000000, buf);
+#endif
 }
 #endif

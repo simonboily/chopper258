@@ -114,7 +114,7 @@ void General (int16_t hate, int16_t mis, stattype status)
                           outtextxy (65,67," copter destroyed the base. Your");
                           outtextxy (65,75," name is cleared.");
                       }
-                      if (mis >= 4 || mis <= 13)
+                      if (mis >= 4 && mis <= 13)
                       {
                           outtextxy (65,59," They believe that you intention-");
                           outtextxy (65,67," ally destroyed the base and killed");

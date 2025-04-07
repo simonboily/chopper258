@@ -68,7 +68,11 @@ static PixelType pixlut[16][4][256][4];
 //     Compute the lookup tables to speedup render
 void render_init(int renderscale)
 {
+#ifdef __EMSCRIPTEN__
+    int rc = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER);
+#else
     int rc = SDL_Init(SDL_INIT_EVERYTHING);
+#endif
     assert(rc == 0);
 
     window = SDL_CreateWindow("chopper3", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
